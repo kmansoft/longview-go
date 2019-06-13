@@ -40,6 +40,7 @@ func GetDataNetwork(data *Data) error {
 		}
 	}
 
+	// Linode uses eth0 but for testing we need to support other names (eno1 on Fedora)
 	mac, err := ioutil.ReadFile("/sys/class/net/eth0/address")
 	if err != nil && eth != "" {
 		mac, err = ioutil.ReadFile(fmt.Sprintf("/sys/class/net/%s/address", eth))
