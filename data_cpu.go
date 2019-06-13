@@ -42,9 +42,13 @@ func GetDataCPU(data *Data) error {
 	}
 
 	psLoadAvg, err := ReadProcFSFile("loadavg")
+	if err != nil {
+		return err
+	}
+
 	line1 := strings.Split(psLoadAvg.GetAsString(), " ")
 	if len(line1) > 1 {
-		load, _ := strconv.ParseFloat(line1[0], 32)
+		load, _ := strconv.ParseFloat(line1[0], 64)
 		data.Longterm["Load"] = load
 	}
 

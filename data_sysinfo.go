@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 )
@@ -83,6 +84,17 @@ func getLinuxDistInfo(data *Data) error {
 		}
 	}
 	data.Instant["SysInfo.cpu.cores"] = cpuCount
+
+	// Uptime
+	psUptime, err := ReadProcFSFile("uptime")
+	if err != nil {
+		return err
+	}
+	line1 := strings.Split(psUptime.GetAsString(), " ")
+	if len(line1) > 0 {
+		uptime, _ := strconv.ParseFloat(line1[0], 64)
+		data.Longterm["Uptime"] = uptime
+	}
 
 	return nil
 }
