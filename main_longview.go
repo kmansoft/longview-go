@@ -18,6 +18,10 @@ const (
 	API_KEY_FILE = "/etc/linode/longview.key"
 )
 
+type Response struct {
+	Sleep int `json:"sleep"`
+}
+
 func main() {
 	// Read API key
 	apiKey := ""
@@ -35,27 +39,41 @@ func main() {
 		return
 	}
 
-	// Data item
-	data := Data{
-		Instant:   make(map[string]interface{}),
-		Longterm:  make(map[string]interface{}),
-		Timestamp: time.Now().Unix(),
+	// Default sleep time
+	sleep := 15
+
+	for {
+
+		// Data item
+		data := Data{
+			Instant:   make(map[string]interface{}),
+			Longterm:  make(map[string]interface{}),
+			Timestamp: time.Now().Unix(),
+		}
+
+		// Fill it in
+		GetDataMemory(&data)
+		GetDataCPU(&data)
+		GetDataSysInfo(&data)
+		GetDataNetwork(&data)
+
+		sleepNew, err := sendDataToServer(apiKey, &data)
+		if err != nil {
+			sleep = 15
+		} else if sleepNew > 0 {
+			sleep = sleepNew
+		}
+
+		// Wait / sleep
+		time.Sleep(time.Duration(sleep) * time.Second)
 	}
-
-	// Fill it in
-	GetDataMemory(&data)
-	GetDataCPU(&data)
-	GetDataSysInfo(&data)
-	GetDataNetwork(&data)
-
-	sendDataToServer(apiKey, &data)
 }
 
 func isApiKeyValid(apiKey string) bool {
 	return len(apiKey) == 35
 }
 
-func sendDataToServer(apiKey string, data *Data) {
+func sendDataToServer(apiKey string, data *Data) (int, error) {
 
 	// Add other smaller required fields
 	post := PostData{
@@ -98,7 +116,7 @@ func sendDataToServer(apiKey string, data *Data) {
 	req, err := http.NewRequest("POST", "https://longview.linode.com/post", body)
 	if err != nil {
 		log.Printf("Cannot make new http request: %s", err)
-		return
+		return 0, err
 	}
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
@@ -107,7 +125,7 @@ func sendDataToServer(apiKey string, data *Data) {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Printf("Cannot get http response data: %s", err)
-		return
+		return 0, err
 	}
 
 	defer func() {
@@ -121,4 +139,16 @@ func sendDataToServer(apiKey string, data *Data) {
 	respBody, _ := ioutil.ReadAll(resp.Body)
 
 	fmt.Println("response Body:", string(respBody))
+
+	// Parse response JSON
+	sleepNew := 0
+
+	if len(respBody) > 0 {
+		var resp Response
+		if json.Unmarshal(respBody, &resp) == nil {
+			sleepNew = resp.Sleep
+		}
+	}
+
+	return sleepNew, nil
 }
