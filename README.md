@@ -8,16 +8,16 @@ a whole bunch of Perl libraries (modules) as dependencies.
 
 A Go version will just be a single executable, as usual.
 
-Things that are working:
+Things that are working now:
 
 - CPU (user / system times, load average)
 - SysInfo (processor count, model, kernel version)
 - Memory (free / used for real and swap)
+- Network (tx/rx and MAC)
 
 The goal is to implement everything which is in the Perl version, so these will
 come next and fairly soon I hope:
 
-- Network
 - Disks
 - Processes
 

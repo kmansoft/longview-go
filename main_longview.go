@@ -46,6 +46,7 @@ func main() {
 	GetDataMemory(&data)
 	GetDataCPU(&data)
 	GetDataSysInfo(&data)
+	GetDataNetwork(&data)
 
 	sendDataToServer(apiKey, &data)
 }
