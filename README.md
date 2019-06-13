@@ -3,8 +3,8 @@ This is going to be a GO version of Linode Longview agent (client):
 
 https://github.com/linode/longview
 
-I like the software, but don't like that it's written in Perl and that I it
-installed a whole bunch of Perl libraries (modules) as dependencies.
+I like the software, but don't like that it's written in Perl and installed
+a whole bunch of Perl libraries (modules) as dependencies.
 
 A Go version will just be a single executable, as usual.
 
