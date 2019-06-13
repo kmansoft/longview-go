@@ -19,11 +19,8 @@ func GetDataNetwork(data *Data) error {
 	expr := regexp.MustCompile(`^\s+([a-zA-Z0-9]+):\s+(\d+)\s+(\d+)`)
 
 	for _, l := range psNetDev.GetAsLines() {
-		fmt.Printf("Network line: %s\n", l)
 		m := expr.FindStringSubmatch(l)
 		if len(m) == 4 {
-			fmt.Printf("Network interfaces: %s\n", m)
-
 			rx, _ := strconv.ParseUint(m[2], 10, 64)
 			tx, _ := strconv.ParseUint(m[3], 10, 64)
 

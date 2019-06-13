@@ -93,7 +93,7 @@ func getLinuxDistInfo(data *Data) error {
 	line1 := strings.Split(psUptime.GetAsString(), " ")
 	if len(line1) > 0 {
 		uptime, _ := strconv.ParseFloat(line1[0], 64)
-		data.Longterm["Uptime"] = uptime
+		data.Instant["Uptime"] = uptime
 	}
 
 	return nil
