@@ -20,6 +20,7 @@ come next and fairly soon I hope:
 
 - Disks
 - Processes
+- Ports
 
 And then
 
