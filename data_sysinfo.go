@@ -9,10 +9,6 @@ import (
 	"syscall"
 )
 
-const (
-	CLIENT_VERSION = "0.1.0"
-)
-
 func GetDataSysInfo(data *Data) error {
 	err := getLinuxDistInfo(data)
 	if err != nil {

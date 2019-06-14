@@ -17,7 +17,7 @@ func ReadConfig(name string) Config {
 
 	expr := regexp.MustCompile(`^\s*(\S+)\s+(\S+)\s*$`)
 
-	data, err := ioutil.ReadFile("/etc/linode/longview.d/" + name + ".conf")
+	data, err := ioutil.ReadFile(CONFIG_LOCATION + name + CONFIG_SUFFIX)
 	if err == nil {
 		for _, l := range strings.Split(string(data), "\n") {
 			i := strings.IndexByte(l, '#')

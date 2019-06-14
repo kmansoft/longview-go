@@ -15,7 +15,10 @@ import (
 )
 
 const (
-	API_KEY_FILE = "/etc/linode/longview.key"
+	API_KEY_FILE    = "/etc/linode/longview.key"
+	CLIENT_VERSION  = "1.1.5"
+	CONFIG_LOCATION = "/etc/linode/longview.d/"
+	CONFIG_SUFFIX   = ".conf"
 )
 
 type Response struct {
