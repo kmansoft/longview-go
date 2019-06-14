@@ -57,6 +57,7 @@ func main() {
 		GetDataSysInfo(&data)
 		GetDataNetwork(&data)
 		GetDataDisks(&data)
+		GetDataProcessList(&data)
 
 		sleepNew, err := sendDataToServer(apiKey, &data)
 		if err != nil {
