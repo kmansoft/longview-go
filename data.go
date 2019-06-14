@@ -1,8 +1,8 @@
 package main
 
 type Data struct {
-	Longterm  map[string]interface{} `json:"LONGTERM"`
 	Instant   map[string]interface{} `json:"INSTANT"`
+	Longterm  map[string]interface{} `json:"LONGTERM"`
 	Timestamp int64                  `json:"timestamp"`
 }
 
