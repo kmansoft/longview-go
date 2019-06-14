@@ -126,7 +126,7 @@ func GetDataProcessesPorts(data *Data) error {
 									}
 								} else {
 									// Active
-									key := fmt.Sprintf("%s.%s.%s.%s.%d",
+									key := fmt.Sprintf("%s.%s",
 										proc.Name, proc.User)
 									if activeItem, ok := active[key]; ok {
 										activeItem.Count += 1
