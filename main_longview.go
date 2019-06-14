@@ -49,7 +49,6 @@ func main() {
 	client := &http.Client{Timeout: 5 * time.Second}
 
 	for {
-
 		// Data item
 		data := Data{
 			Instant:   make(map[string]interface{}),
@@ -58,18 +57,18 @@ func main() {
 		}
 
 		// Fill it in
-		GetDataMemory(&data)
-		GetDataCPU(&data)
+		_ = GetDataMemory(&data)
+		_ = GetDataCPU(&data)
 
-		GetDataSysInfo(&data)
+		_ = GetDataSysInfo(&data)
 
-		GetDataNetwork(&data)
-		GetDataDisks(&data)
+		_ = GetDataNetwork(&data)
+		_ = GetDataDisks(&data)
 
-		GetDataProcessesPorts(&data)
+		_ = GetDataProcessesPorts(&data)
 
-		GetDataAppNginx(client, &data)
-		GetDataAppMysql(client, &data)
+		_ = GetDataAppNginx(client, &data)
+		_ = GetDataAppMysql(client, &data)
 
 		// Send to server
 		sleepNew, err := sendDataToServer(client, apiKey, &data)
