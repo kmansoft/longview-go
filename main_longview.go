@@ -66,6 +66,7 @@ func main() {
 		GetDataProcessesPorts(&data)
 
 		GetDataAppNginx(client, &data)
+		GetDataAppMysql(client, &data)
 
 		// Send to server
 		sleepNew, err := sendDataToServer(client, apiKey, &data)

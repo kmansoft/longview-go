@@ -17,7 +17,9 @@ func GetDataAppNginx(client *http.Client, data *Data) error {
 	}
 
 	namespace := "Applications.Nginx."
-	location := "http://127.0.0.1/nginx_status"
+
+	config := ReadConfig("Nginx")
+	location := config.GetOrDefault("location", "http://127.0.0.1/nginx_status")
 
 	resp, err := client.Get(location)
 	if err != nil {
@@ -37,16 +39,6 @@ func GetDataAppNginx(client *http.Client, data *Data) error {
 		log.Printf("Cannot get http response data: %s", err)
 		return err
 	}
-
-	fmt.Printf("nginx status\n%s\n", respBody)
-
-	// Server version
-	version := resp.Header.Get("Server")
-	if len(version) > 0 {
-		data.Instant[namespace+"version"] = version
-	}
-	data.Instant[namespace+"status"] = 0
-	data.Instant[namespace+"status_message"] = ""
 
 	respString := string(respBody)
 	if strings.Index(respString, "server accepts handled requests") < 0 {
@@ -74,6 +66,14 @@ func GetDataAppNginx(client *http.Client, data *Data) error {
 			data.Longterm[namespace+"waiting"], _ = strconv.ParseUint(m[3], 10, 64)
 		}
 	}
+
+	// Server version
+	version := resp.Header.Get("Server")
+	if len(version) > 0 {
+		data.Instant[namespace+"version"] = version
+	}
+	data.Instant[namespace+"status"] = 0
+	data.Instant[namespace+"status_message"] = ""
 
 	return nil
 }
