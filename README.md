@@ -13,18 +13,17 @@ Things that are working now:
 - CPU (user / system times, load average)
 - SysInfo (processor count, model, kernel version)
 - Memory (free / used for real and swap)
-- Network (tx/rx and MAC)
+- Network, t/rx and MAC
+- Network, listen sockets and connections
+- Disks
+- Processes
+- NGINX
+- MySQL
 
 The goal is to implement everything which is in the Perl version, so these will
 come next and fairly soon I hope:
 
-- Disks
-- Processes
-- Ports
-
-And then
-
 - Package updates
-- NGINX
 
 - Apache (???) I don't use it and don't have it installed, but will take a pull request
+

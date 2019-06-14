@@ -87,8 +87,14 @@ func GetDataProcessesPorts(data *Data) error {
 	active := make(map[string]*DataActive)
 	listen := make(map[string]*DataListen)
 
+	myPid := os.Getpid()
+
 	for _, proc := range processList.plist {
 		if proc.PID == 2 || proc.PPID == 2 {
+			continue
+		}
+
+		if int(proc.PID) == myPid {
 			continue
 		}
 
