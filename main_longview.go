@@ -65,6 +65,8 @@ func main() {
 
 		GetDataProcessesPorts(&data)
 
+		GetDataAppNginx(client, &data)
+
 		// Send to server
 		sleepNew, err := sendDataToServer(client, apiKey, &data)
 		if err != nil {
@@ -123,28 +125,25 @@ func sendDataToServer(client *http.Client, apiKey string, data *Data) (int, erro
 	_ = writer.Close()
 
 	// Send it
-	req, err := http.NewRequest("POST", "https://longview.linode.com/post", body)
-	if err != nil {
-		log.Printf("Cannot make new http request: %s", err)
-		return 0, err
-	}
-
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	resp, err := client.Do(req)
+	resp, err := http.Post("https://longview.linode.com/post", writer.FormDataContentType(), body)
 	if err != nil {
 		log.Printf("Cannot get http response data: %s", err)
 		return 0, err
 	}
 
 	defer func() {
-		_ = resp.Body.Close()
+		if resp.Body != nil {
+			_ = resp.Body.Close()
+		}
 	}()
 
-	// Parse response - which may tell us for how long to sleep or to terminate
-	respBody, _ := ioutil.ReadAll(resp.Body)
-
 	// Parse response JSON
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Cannot get http response data: %s", err)
+		return 0, err
+	}
+
 	sleepNew := 0
 
 	if len(respBody) > 0 {
