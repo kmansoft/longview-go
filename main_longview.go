@@ -54,11 +54,15 @@ func main() {
 		// Fill it in
 		GetDataMemory(&data)
 		GetDataCPU(&data)
+
 		GetDataSysInfo(&data)
+
 		GetDataNetwork(&data)
 		GetDataDisks(&data)
-		GetDataProcessList(&data)
 
+		GetDataProcessesPorts(&data)
+
+		// Send to server
 		sleepNew, err := sendDataToServer(apiKey, &data)
 		if err != nil {
 			sleep = 15

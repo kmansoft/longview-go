@@ -2,11 +2,16 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
+	"os"
 	"os/exec"
 	"os/user"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -28,14 +33,15 @@ type DataProcessList struct {
 	uptimeJiffies, ticks float64
 }
 
-func GetDataProcessList(data *Data) error {
+func GetDataProcessesPorts(data *Data) error {
 
-	list, err := newProcessList()
+	// Processes
+	processList, err := newProcessList()
 	if err != nil {
 		return err
 	}
 
-	for _, proc := range list.plist {
+	for _, proc := range processList.plist {
 		if proc.PID == 2 || proc.PPID == 2 {
 			continue
 		}
@@ -49,9 +55,9 @@ func GetDataProcessList(data *Data) error {
 		data.Longterm[prefix+"mem"] = proc.RSS
 		data.Longterm[prefix+"cpu"] = proc.CPU
 
-		list.addToCount(data.Longterm, prefix+"count", 1)
-		list.addToCount(data.Longterm, prefix+"ioreadkbytes", proc.IOReadKBytes)
-		list.addToCount(data.Longterm, prefix+"iowritekbytes", proc.IOWriteKBytes)
+		processList.addToCount(data.Longterm, prefix+"count", 1)
+		processList.addToCount(data.Longterm, prefix+"ioreadkbytes", proc.IOReadKBytes)
+		processList.addToCount(data.Longterm, prefix+"iowritekbytes", proc.IOWriteKBytes)
 	}
 
 	/*
@@ -72,6 +78,80 @@ func GetDataProcessList(data *Data) error {
 
 	*/
 
+	// Ports (network connections)
+	networkList, err := newNetworkList()
+	if err != nil {
+		return err
+	}
+
+	active := make(map[string]*DataActive)
+	listen := make(map[string]*DataListen)
+
+	for _, proc := range processList.plist {
+		if proc.PID == 2 || proc.PPID == 2 {
+			continue
+		}
+
+		files, err := ioutil.ReadDir(fmt.Sprintf("/proc/%d/fd", proc.PID))
+		if err != nil {
+			continue
+		}
+
+		for _, fd := range files {
+			if rl, err := os.Readlink(fmt.Sprintf("/proc/%d/fd/%s", proc.PID, fd.Name())); err == nil {
+				if len(rl) > 0 && strings.HasPrefix(rl, "socket:") {
+					socket := rl[7:]
+					sockl := len(socket)
+					if sockl > 2 && socket[0] == '[' && socket[sockl-1] == ']' {
+						socket = socket[1 : sockl-1]
+						if inode, err := strconv.ParseUint(socket, 10, 64); err == nil {
+							if network, ok := networkList.networkByINode[inode]; ok {
+
+								if network.isListening {
+									// Listening
+									key := fmt.Sprintf("%s.%s.%s.%s.%d",
+										proc.Name, proc.User,
+										network.t, network.srcIP.String(), network.srcPort)
+									if _, ok := listen[key]; !ok {
+										listen[key] = &DataListen{
+											Name: proc.Name, User: proc.User,
+											T:     network.t,
+											SrcIP: network.srcIP, SrcPort: network.srcPort}
+									}
+								} else {
+									// Active
+									key := fmt.Sprintf("%s.%s.%s.%s.%d",
+										proc.Name, proc.User)
+									if activeItem, ok := active[key]; ok {
+										activeItem.Count += 1
+									} else {
+										active[key] = &DataActive{
+											Name: proc.Name, User: proc.User,
+											Count: 1,
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	activeList := make([]*DataActive, 0)
+	for _, activeItem := range active {
+		activeList = append(activeList, activeItem)
+	}
+
+	listenList := make([]*DataListen, 0)
+	for _, listenItem := range listen {
+		listenList = append(listenList, listenItem)
+	}
+
+	data.Instant["Ports.active"] = activeList
+	data.Instant["Ports.listening"] = listenList
+
 	return nil
 }
 
@@ -80,7 +160,7 @@ func newProcessList() (*DataProcessList, error) {
 		plist: make([]*DataProcess, 0),
 	}
 
-	err := list.fill()
+	err := list.loadProcessList()
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +168,7 @@ func newProcessList() (*DataProcessList, error) {
 	return list, nil
 }
 
-func (list *DataProcessList) fill() error {
+func (list *DataProcessList) loadProcessList() error {
 	expr := regexp.MustCompile(`\d+`)
 
 	// Get uptime
@@ -124,7 +204,7 @@ func (list *DataProcessList) fill() error {
 				continue
 			}
 
-			item := list.getDataForProcess(pid)
+			item := list.getProcess(pid)
 			if item != nil {
 				list.plist = append(list.plist, item)
 			}
@@ -134,7 +214,7 @@ func (list *DataProcessList) fill() error {
 	return nil
 }
 
-func (list *DataProcessList) getDataForProcess(pid uint64) *DataProcess {
+func (list *DataProcessList) getProcess(pid uint64) *DataProcess {
 	prefix := fmt.Sprintf("/proc/%d/", pid)
 
 	if status, err := ioutil.ReadFile(prefix + "status"); err == nil {
@@ -248,5 +328,134 @@ func (list *DataProcessList) addToCount(m map[string]interface{}, key string, va
 		m[key] = count.(uint64) + value
 	} else {
 		m[key] = value
+	}
+}
+
+type DataNetworkList struct {
+	needFlip       bool
+	networkByINode map[uint64]DataNetwork
+}
+
+type DataNetwork struct {
+	t                string
+	srcIP, dstIP     net.IP
+	srcPort, dstPort uint16
+	isListening      bool
+}
+
+type DataListen struct {
+	User    string `json:"user"`
+	Name    string `json:"name"`
+	T       string `json:"type"`
+	SrcIP   net.IP `json:"ip"`
+	SrcPort uint16 `json:"port"`
+}
+
+type DataActive struct {
+	User  string `json:"user"`
+	Name  string `json:"name"`
+	Count uint64 `json:"count"`
+}
+
+func newNetworkList() (*DataNetworkList, error) {
+	list := &DataNetworkList{}
+
+	err := list.loadNetworkCache()
+	if err != nil {
+		return nil, err
+	}
+
+	return list, nil
+}
+
+func (list *DataNetworkList) loadNetworkCache() error {
+	arch := runtime.GOARCH
+
+	list.needFlip = arch == "amd64" || arch == "x86"
+	list.networkByINode = make(map[uint64]DataNetwork)
+
+	for _, t := range []string{"tcp", "tcp6", "udp", "udp6"} {
+		data, err := ioutil.ReadFile(fmt.Sprintf("/proc/net/%s", t))
+		if err != nil {
+			return err
+		}
+
+		for i, l := range strings.Split(string(data), "\n") {
+			if i == 0 {
+				continue
+			}
+
+			f := strings.Fields(l)
+			if len(f) >= 10 {
+				inode, err := strconv.ParseUint(f[9], 10, 64)
+				if err == nil && inode > 0 {
+					srcIP, srcPort, err := list.parse(f[1])
+					if err != nil {
+						continue
+					}
+
+					dstIP, dstPort, err := list.parse(f[2])
+					if err != nil {
+						continue
+					}
+
+					network := DataNetwork{
+						t:     t,
+						srcIP: srcIP, srcPort: srcPort,
+						dstIP: dstIP, dstPort: dstPort,
+						isListening: dstIP.IsUnspecified() && dstPort == 0,
+					}
+
+					list.networkByINode[inode] = network
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+var (
+	errInvalidAddress = errors.New("Invalid addresss")
+)
+
+func (list *DataNetworkList) parse(s string) (net.IP, uint16, error) {
+	i := strings.IndexByte(s, ':')
+	if i <= 0 {
+		return nil, 0, errInvalidAddress
+	}
+
+	addr := s[:i]
+	port := s[i+1:]
+
+	l := len(addr)
+	if l != 8 && l != 32 {
+		return nil, 0, errInvalidAddress
+	}
+
+	valueIP, err := hex.DecodeString(addr)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	valuePort, err := strconv.ParseUint(port, 16, 16)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if list.needFlip {
+		list.flip(valueIP)
+	}
+
+	return valueIP, uint16(valuePort), nil
+}
+
+func (list *DataNetworkList) flip(l []uint8) {
+	i := 0
+	j := len(l) - 1
+	for i < j {
+		l[i], l[j] = l[j], l[i]
+		i += 1
+		j -= 1
 	}
 }
