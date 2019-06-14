@@ -42,6 +42,9 @@ func main() {
 	// Default sleep time
 	sleep := 15
 
+	// HTTP client
+	client := &http.Client{Timeout: 5 * time.Second}
+
 	for {
 
 		// Data item
@@ -63,7 +66,7 @@ func main() {
 		GetDataProcessesPorts(&data)
 
 		// Send to server
-		sleepNew, err := sendDataToServer(apiKey, &data)
+		sleepNew, err := sendDataToServer(client, apiKey, &data)
 		if err != nil {
 			sleep = 15
 		} else if sleepNew > 0 {
@@ -71,6 +74,7 @@ func main() {
 		}
 
 		// Wait / sleep
+		fmt.Printf("Sleeping for %d seconds\n", sleep)
 		time.Sleep(time.Duration(sleep) * time.Second)
 	}
 }
@@ -79,7 +83,7 @@ func isApiKeyValid(apiKey string) bool {
 	return len(apiKey) == 35
 }
 
-func sendDataToServer(apiKey string, data *Data) (int, error) {
+func sendDataToServer(client *http.Client, apiKey string, data *Data) (int, error) {
 
 	// Add other smaller required fields
 	post := PostData{
@@ -94,7 +98,7 @@ func sendDataToServer(apiKey string, data *Data) (int, error) {
 
 	// Encode to JSON
 	jsonData, _ := json.MarshalIndent(&post, "", "\t")
-	fmt.Printf("Output:\n%s\n", jsonData)
+	fmt.Printf("%s\n", jsonData)
 
 	// Compress the JSON
 	jsonCompressBuffer := bytes.Buffer{}
@@ -127,7 +131,6 @@ func sendDataToServer(apiKey string, data *Data) (int, error) {
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Printf("Cannot get http response data: %s", err)
@@ -139,12 +142,7 @@ func sendDataToServer(apiKey string, data *Data) (int, error) {
 	}()
 
 	// Parse response - which may tell us for how long to sleep or to terminate
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
-
 	respBody, _ := ioutil.ReadAll(resp.Body)
-
-	fmt.Println("response Body:", string(respBody))
 
 	// Parse response JSON
 	sleepNew := 0
