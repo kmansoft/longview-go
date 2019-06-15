@@ -22,10 +22,14 @@ fi
 OUT_DEB="longview-go_${VERSION}-${BUILD}_$DEB_ARCH.deb"
 
 SERVER="kman.mobi"
+if [[ $# -ge 1 ]]
+then
+    SERVER="$1"
+fi
 
 echo "*** Building Debian package ..."
 
-if ! ./package/package_debian.sh
+if ! ./package/package_debian.sh amd64
 then
 	echo "*** Error"
 	exit 1

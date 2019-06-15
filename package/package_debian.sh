@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# For now this will do
-ARCH=x86_64
+ARCH_LIST="386 amd64"
+if [[ $# -ge 1 ]]
+then
+    ARCH_LIST="$1"
+fi
 
 PACKDIR="./package"
 TEMPDIR="${PACKDIR}/temp-debian"
@@ -9,20 +12,6 @@ EXENAME="longview-go.out"
 
 VERSION=`cat ${PACKDIR}/VAR_VERSION | perl -ne 'chomp and print'`
 BUILD=`cat ${PACKDIR}/VAR_BUILD | perl -ne 'chomp and print'`
-
-if [[ "$ARCH" == "i686" ]]; then
-    DEB_ARCH=i386
-elif [[ "$ARCH" == "x86_64" ]]; then
-    DEB_ARCH=amd64
-else
-    echo "*** Unknown arch $ARCH"
-    exit 1
-fi
-
-echo "*** Version : ${VERSION}-${BUILD}"
-echo "*** Arch    : ${DEB_ARCH}"
-
-OUT_DEB="longview-go_${VERSION}-${BUILD}_$DEB_ARCH.deb"
 
 [[ -d "${TEMPDIR}" ]] && rm -rf "${TEMPDIR}"
 
@@ -34,60 +23,79 @@ mkdir -p "${TEMPDIR}/etc/linode"
 mkdir -p "${TEMPDIR}/etc/linode/longview.d"
 mkdir -p "${TEMPDIR}/lib/systemd/system/"
 
-# Build the binary
+# For now this will do
+for ARCH in $ARCH_LIST
+do
+	if [[ "$ARCH" == "386" ]]; then
+	    DEB_ARCH=i386
+	elif [[ "$ARCH" == "amd64" ]]; then
+	    DEB_ARCH=amd64
+	else
+	    echo "*** Unknown arch $ARCH"
+	    exit 1
+	fi
 
-if ! go build -o "${TEMPDIR}/usr/sbin/${EXENAME}" *.go
-then
-	echo "*** Build error"
-	exit 1
-fi
+	echo "*** Version : ${VERSION}-${BUILD}"
+	echo "*** Arch    : ${DEB_ARCH}"
 
-ls -lh "${TEMPDIR}/usr/sbin/${EXENAME}"
+	OUT_DEB="longview-go_${VERSION}-${BUILD}_$DEB_ARCH.deb"
 
-# Copy various supporting files
+	# Build the binary
 
-cp "${PACKDIR}/longview-go.service" "${TEMPDIR}/lib/systemd/system/"
+	if ! GOARCH="${ARCH}" go build -o "${TEMPDIR}/usr/sbin/${EXENAME}" *.go
+	then
+		echo "*** Build error"
+		exit 1
+	fi
 
-# Generate debian-binary
+	ls -lh "${TEMPDIR}/usr/sbin/${EXENAME}"
+	file "${TEMPDIR}/usr/sbin/${EXENAME}"
 
-echo "2.0" > "${TEMPDIR}/debian-binary"
+	# Copy various supporting files
 
-# Generate control
+	cp "${PACKDIR}/longview-go.service" "${TEMPDIR}/lib/systemd/system/"
 
-echo "Version: $VERSION-$BUILD" > "${TEMPDIR}/control"
-echo "Installed-Size:" `du -sb "${TEMPDIR}" | awk '{print int($1/1024)}'` >> "${TEMPDIR}/control"
-echo "Architecture: $DEB_ARCH" >> "${TEMPDIR}/control"
-cat "${PACKDIR}/deb_control" >> "${TEMPDIR}/control"
+	# Generate debian-binary
 
-# Copy postinst and postrm
+	echo "2.0" > "${TEMPDIR}/debian-binary"
 
-cp "${PACKDIR}/deb_postinst" "${TEMPDIR}/postinst"
-cp "${PACKDIR}/deb_postrm" "${TEMPDIR}/postrm"
+	# Generate control
 
-(
-    # Generate md5 sums
+	echo "Version: $VERSION-$BUILD" > "${TEMPDIR}/control"
+	echo "Installed-Size:" `du -sb "${TEMPDIR}" | awk '{print int($1/1024)}'` >> "${TEMPDIR}/control"
+	echo "Architecture: $DEB_ARCH" >> "${TEMPDIR}/control"
+	cat "${PACKDIR}/deb_control" >> "${TEMPDIR}/control"
 
-    cd "${TEMPDIR}"
+	# Copy postinst and postrm
 
-    find ./usr ./lib ./etc -type f | while read i ; do
-        md5sum "$i" | sed 's/\.\///g' >> md5sums
-    done
+	cp "${PACKDIR}/deb_postinst" "${TEMPDIR}/postinst"
+	cp "${PACKDIR}/deb_postrm" "${TEMPDIR}/postrm"
 
-    # Archive control
+	(
+	    # Generate md5 sums
 
-    chmod 644 control md5sums
-    chmod 755 postrm postinst
-    fakeroot -- tar -cz -f ./control.tar.gz ./control ./md5sums ./postinst ./postrm
+	    cd "${TEMPDIR}"
 
-    # Archive data
+	    find ./usr ./lib ./etc -type f | while read i ; do
+	        md5sum "$i" | sed 's/\.\///g' >> md5sums
+	    done
 
-    fakeroot -- tar -cz -f ./data.tar.gz ./etc ./lib ./usr
+	    # Archive control
 
-    # Make final archive
+	    chmod 644 control md5sums
+	    chmod 755 postrm postinst
+	    fakeroot -- tar -cz -f ./control.tar.gz ./control ./md5sums ./postinst ./postrm
 
-    fakeroot -- ar -cr "${OUT_DEB}" debian-binary control.tar.gz data.tar.gz
-)
+	    # Archive data
 
-ls -lh "${TEMPDIR}/${OUT_DEB}"
+	    fakeroot -- tar -cz -f ./data.tar.gz ./etc ./lib ./usr
 
-ar -t -f "${TEMPDIR}/${OUT_DEB}"
+	    # Make final archive
+
+	    fakeroot -- ar -cr "${OUT_DEB}" debian-binary control.tar.gz data.tar.gz
+	)
+
+	ls -lh "${TEMPDIR}/${OUT_DEB}"
+
+	ar -t -f "${TEMPDIR}/${OUT_DEB}"
+done
