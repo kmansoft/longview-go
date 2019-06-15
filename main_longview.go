@@ -9,12 +9,14 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
+	"os"
 	"strings"
 	"time"
 )
 
 const (
 	API_KEY_FILE    = "/etc/linode/longview.key"
+	API_KEY_TEST    = "12345678-1234-1234-1223334445556677"
 	CLIENT_VERSION  = "1.1.5"
 	CONFIG_LOCATION = "/etc/linode/longview.d/"
 	CONFIG_SUFFIX   = ".conf"
@@ -30,16 +32,23 @@ func main() {
 	apiKey := ""
 	apiKeyBytes, err := ioutil.ReadFile(API_KEY_FILE)
 	if err == nil {
-		apiKey = strings.TrimSpace(string(apiKeyBytes))
+		for _, l := range strings.Split(strings.TrimSpace(string(apiKeyBytes)), "\n") {
+			l = strings.TrimSpace(l)
+			if strings.HasPrefix(l, "#") {
+				continue
+			}
+			apiKey = l
+			break
+		}
 	}
 	if len(apiKey) == 0 {
 		// No api key
 		fmt.Printf("There is no API key, please set in %s\n", API_KEY_FILE)
-		return
-	} else if !isApiKeyValid(apiKey) {
-		// Api key is set but not valid
+		os.Exit(1)
+	} else if !isApiKeyValid(apiKey) || isApiKeyTest(apiKey) {
+		// Api key is set but not valid, or is our sample key
 		fmt.Printf("The API key is not valid, please update in %s\n", API_KEY_FILE)
-		return
+		os.Exit(1)
 	}
 
 	// Default sleep time
@@ -92,6 +101,10 @@ func main() {
 
 func isApiKeyValid(apiKey string) bool {
 	return len(apiKey) == 35
+}
+
+func isApiKeyTest(apiKey string) bool {
+	return apiKey == API_KEY_TEST
 }
 
 func sendDataToServer(client *http.Client, apiKey string, data *Data) (int, bool, error) {

@@ -1,0 +1,27 @@
+#!/bin/sh
+set -e
+
+if [ ! -f "/etc/linode/longview.key" ]
+then
+    printf "# Set your API key below like this\n12345678-1234-1234-1223334445556677\n" \
+        > "/etc/linode/longview.key"
+
+    echo "***"
+    echo "*** Please set your Linode Longview API key in /etc/linode/longview.key"
+    echo "***"
+fi
+
+if [ ! -f "/etc/linode/longview.d/Nginx.conf" ]
+then
+    printf "# Set your nginx stats location like this\n#location http://127.0.0.1/nginx_status\n" \
+        > "/etc/linode/longview.d/Nginx.conf"
+fi
+
+if [ ! -f "/etc/linode/longview.d/MySQL.conf" ]
+then
+    printf "# Set your MySQL stats user like this\n#username linode-longview\n#password example_password\n" \
+        > "/etc/linode/longview.d/MySQL.conf"
+fi
+
+systemctl daemon-reload
+systemctl enable longview-go

@@ -1,0 +1,8 @@
+[Unit]
+Description=Longview client, GO version
+
+[Service]
+ExecStart=/usr/sbin/longview-go.out
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+Package: longview-go
+Maintainer: Kostya Vasilyev <kmansoft@gmail.com>
+Depends: libc6 (>= 2.7-1)
+Section: net
+Priority: optional
+Homepage: https://github.com/kmansoft/longview-go
+Description: A port of Linode Longview client to Go
+ Original software: https://github.com/linode/longview
+ .
+ Features:
+ .
+  * A drop-in replacement for Linode Longview client
+  * Supports monitoring of system metrics (network, disk, system info), Nginx, MySQL
+  * Does not support (yet) Apache or apt-get updates
+  * Does not support (yet) dm and md disk volumes
+
