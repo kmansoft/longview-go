@@ -1,6 +1,11 @@
 #!/usr/bin/bash
 
 SERVER="kman.mobi"
+if [ $# -gt 0 ]
+then
+	SERVER="$1"
+fi
+
 
 echo "*** Building ..."
 
@@ -10,10 +15,13 @@ then
 	exit 1
 fi
 
-echo "*** Copying ..."
+echo "*** Copying to ${SERVER}..."
 
-rsync -acv *.service "root@${SERVER}:/etc/systemd/system/"
-rsync -acv *.out "root@${SERVER}:"
+if ! rsync -acv *.service "root@${SERVER}:/etc/systemd/system/" || ! rsync -acv *.out "root@${SERVER}:"
+then
+	echo "*** Error"
+	exit 1
+fi
 
 echo "*** Restarting ..."
 

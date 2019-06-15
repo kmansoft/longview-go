@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -23,7 +22,7 @@ func GetDataAppNginx(client *http.Client, data *Data) error {
 
 	resp, err := client.Get(location)
 	if err != nil {
-		log.Printf("Cannot get http response data: %s", err)
+		fmt.Printf("Cannot get http response data: %s\n", err)
 		return err
 	}
 
@@ -36,7 +35,7 @@ func GetDataAppNginx(client *http.Client, data *Data) error {
 	// Parse response
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("Cannot get http response data: %s", err)
+		fmt.Printf("Cannot get http response data: %s\n", err)
 		return err
 	}
 

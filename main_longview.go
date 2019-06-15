@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
@@ -22,7 +21,8 @@ const (
 )
 
 type Response struct {
-	Sleep int `json:"sleep"`
+	Die   string `json:"die"`
+	Sleep int    `json:"sleep"`
 }
 
 func main() {
@@ -34,11 +34,11 @@ func main() {
 	}
 	if len(apiKey) == 0 {
 		// No api key
-		log.Printf("There is no API key, please set in %s", API_KEY_FILE)
+		fmt.Printf("There is no API key, please set in %s\n", API_KEY_FILE)
 		return
 	} else if !isApiKeyValid(apiKey) {
 		// Api key is set but not valid
-		log.Printf("The API key is not valid, please update in %s", API_KEY_FILE)
+		fmt.Printf("The API key is not valid, please update in %s\n", API_KEY_FILE)
 		return
 	}
 
@@ -71,11 +71,17 @@ func main() {
 		_ = GetDataAppMysql(client, &data)
 
 		// Send to server
-		sleepNew, err := sendDataToServer(client, apiKey, &data)
+		sleepNew, die, err := sendDataToServer(client, apiKey, &data)
 		if err != nil {
 			sleep = 15
 		} else if sleepNew > 0 {
 			sleep = sleepNew
+		}
+
+		// Server tells us to quit
+		if die {
+			fmt.Printf("Server told us to quit\n")
+			break
 		}
 
 		// Wait / sleep
@@ -88,7 +94,7 @@ func isApiKeyValid(apiKey string) bool {
 	return len(apiKey) == 35
 }
 
-func sendDataToServer(client *http.Client, apiKey string, data *Data) (int, error) {
+func sendDataToServer(client *http.Client, apiKey string, data *Data) (int, bool, error) {
 
 	// Add other smaller required fields
 	post := PostData{
@@ -130,8 +136,8 @@ func sendDataToServer(client *http.Client, apiKey string, data *Data) (int, erro
 	// Send it
 	resp, err := http.Post("https://longview.linode.com/post", writer.FormDataContentType(), body)
 	if err != nil {
-		log.Printf("Cannot get http response data: %s", err)
-		return 0, err
+		fmt.Printf("Cannot get http response data: %s\n", err)
+		return 0, false, err
 	}
 
 	defer func() {
@@ -143,18 +149,20 @@ func sendDataToServer(client *http.Client, apiKey string, data *Data) (int, erro
 	// Parse response JSON
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("Cannot get http response data: %s", err)
-		return 0, err
+		fmt.Printf("Cannot get http response data: %s\n", err)
+		return 0, false, err
 	}
 
 	sleepNew := 0
+	die := false
 
 	if len(respBody) > 0 {
 		var resp Response
 		if json.Unmarshal(respBody, &resp) == nil {
+			die = resp.Die == "please"
 			sleepNew = resp.Sleep
 		}
 	}
 
-	return sleepNew, nil
+	return sleepNew, die, nil
 }
