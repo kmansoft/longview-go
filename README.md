@@ -20,10 +20,21 @@ Things that are working now:
 - NGINX
 - MySQL
 
-The goal is to implement everything which is in the Perl version, so these will
-come next and fairly soon I hope:
+The goal is to implement everything which is in the Perl version, so these
+will come next and fairly soon I hope:
 
 - Package updates
 
-- Apache (???) I don't use it and don't have it installed, but will take a pull request
+- Apache (???) I don't use it and don't have it installed, but will gladly
+take a pull request
 
+# License
+
+Since it's based on the original Linode Longview Perl code - the license for
+this (derived work) is GPL 
+
+# Source code
+
+- Main: https://github.com/kmansoft/longview-go
+
+- Mirror: https://gitlab.com/kmansoft/longview-go
