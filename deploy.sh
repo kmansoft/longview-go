@@ -27,6 +27,19 @@ then
     SERVER="$1"
 fi
 
+KEY = ""
+case "$SERVER" in
+    "kman.mobi")
+        KEY="2C6F9D8D-068A-D23C-1B87639441717CB1"
+        ;;
+    "apache.topview.rocks")
+        KEY="B6EEAB78-DAC1-12BB-55A06A8AD70521FF"
+        ;;
+    *)
+        echo "Unknown server ${SERVER}"
+        exit 1
+esac
+
 echo "*** Building Debian package ..."
 
 if ! ./package/package_debian.sh amd64
@@ -58,7 +71,7 @@ fi
 echo "*** Installing ..."
 
 ssh -t "root@${SERVER}" "apt-get install --reinstall ./${OUT_DEB} && \
-    printf 'B6EEAB78-DAC1-12BB-55A06A8AD70521FF\n' > /etc/linode/longview.key &&
+    printf '$KEY\n' > /etc/linode/longview.key &&
     printf 'username linode-longview\npassword longview\n' > /etc/linode/longview.d/MySQL.conf"
 
 echo "*** Restarting ..."
