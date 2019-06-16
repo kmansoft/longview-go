@@ -55,6 +55,18 @@ do
 
 	cp "${PACKDIR}/longview-go.service" "${TEMPDIR}/lib/systemd/system/"
 
+	# Create config giles
+
+    printf "# Set your API key below like this\n12345678-1234-1234-1223334445556677\n" \
+        > "${TEMPDIR}/etc/linode/longview.key"
+
+    printf "# Set your Apache stats location like this\n#location http://127.0.0.1/server-status?auto\n" \
+        > "${TEMPDIR}/etc/linode/longview.d/Apache.conf"
+    printf "# Set your MySQL stats user like this\n#username linode-longview\n#password example_password\n" \
+        > "${TEMPDIR}/etc/linode/longview.d/MySQL.conf"
+    printf "# Set your Nginx stats location like this\n#location http://127.0.0.1/nginx_status\n" \
+        > "${TEMPDIR}/etc/linode/longview.d/Nginx.conf"
+
 	# Generate debian-binary
 
 	echo "2.0" > "${TEMPDIR}/debian-binary"
@@ -65,6 +77,10 @@ do
 	echo "Installed-Size:" `du -sb "${TEMPDIR}" | awk '{print int($1/1024)}'` >> "${TEMPDIR}/control"
 	echo "Architecture: $DEB_ARCH" >> "${TEMPDIR}/control"
 	cat "${PACKDIR}/deb_control" >> "${TEMPDIR}/control"
+
+	# Copy conffile
+
+	cp "${PACKDIR}/deb_conffile" "${TEMPDIR}/conffile"
 
 	# Copy postinst and postrm
 

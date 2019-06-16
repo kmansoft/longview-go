@@ -1,0 +1,4 @@
+/etc/linode/longview.key
+/etc/linode/longview.d/Apache.conf
+/etc/linode/longview.d/MySQL.conf
+/etc/linode/longview.d/Nginx.conf
