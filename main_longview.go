@@ -77,6 +77,7 @@ func main() {
 		_ = GetDataProcessesPorts(&data)
 
 		_ = GetDataAppNginx(client, &data)
+		_ = GetDataAppApache(client, &data)
 		_ = GetDataAppMysql(client, &data)
 
 		// Send to server

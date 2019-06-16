@@ -57,7 +57,9 @@ fi
 
 echo "*** Installing ..."
 
-ssh "root@${SERVER}" "apt-get install --reinstall ./${OUT_DEB}"
+ssh -t "root@${SERVER}" "apt-get install --reinstall ./${OUT_DEB} && \
+    printf 'B6EEAB78-DAC1-12BB-55A06A8AD70521FF\n' > /etc/linode/longview.key &&
+    printf 'username linode-longview\npassword longview\n' > /etc/linode/longview.d/MySQL.conf"
 
 echo "*** Restarting ..."
 

@@ -12,3 +12,8 @@ type PostData struct {
 	Payload   []*Data `json:"payload"`
 	Timestamp int64   `json:"timestamp"`
 }
+
+func (data *Data) HasProcess(pname string) bool {
+	_, ok := data.Instant["Processes."+pname+".longname"]
+	return ok
+}

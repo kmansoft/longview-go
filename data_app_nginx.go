@@ -11,7 +11,7 @@ import (
 
 func GetDataAppNginx(client *http.Client, data *Data) error {
 
-	if _, ok := data.Instant["Processes.nginx.longname"]; !ok {
+	if !data.HasProcess("nginx") {
 		return nil
 	}
 
@@ -71,6 +71,8 @@ func GetDataAppNginx(client *http.Client, data *Data) error {
 	if len(version) > 0 {
 		data.Instant[namespace+"version"] = version
 	}
+
+	// Overall status
 	data.Instant[namespace+"status"] = 0
 	data.Instant[namespace+"status_message"] = ""
 

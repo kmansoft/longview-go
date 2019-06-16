@@ -18,15 +18,15 @@ Things that are working now:
 - Disks
 - Processes
 - NGINX
+- Apache
 - MySQL
 
-The goal is to implement everything which is in the Perl version, so these
-will come next and fairly soon I hope:
+My goal is feature parity with the Perl version, at this time these are
+still missing:
 
 - Package updates
 
-- Apache (???) I don't use it and don't have it installed, but will gladly
-take a pull request
+- Support for dm/md disk devices (LVM?)
 
 # License
 

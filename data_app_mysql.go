@@ -9,7 +9,7 @@ import (
 
 func GetDataAppMysql(client *http.Client, data *Data) error {
 
-	if _, ok := data.Instant["Processes.mysqld.longname"]; !ok {
+	if !data.HasProcess("mysqld") {
 		return nil
 	}
 
@@ -20,7 +20,7 @@ func GetDataAppMysql(client *http.Client, data *Data) error {
 	pass := config.GetOrDefault("password", "")
 
 	if len(user) <= 0 || len(pass) <= 0 {
-		fmt.Printf("Please provide MySQL username and password in /etc/linode/longview.d/MySQL.conf")
+		fmt.Printf("Please provide MySQL username and password in /etc/linode/longview.d/MySQL.conf\n")
 		return nil
 	}
 
@@ -97,6 +97,8 @@ func GetDataAppMysql(client *http.Client, data *Data) error {
 	if len(version) > 0 {
 		data.Instant[namespace+"version"] = version
 	}
+
+	// Overall status
 	data.Instant[namespace+"status"] = 0
 	data.Instant[namespace+"status_message"] = ""
 
