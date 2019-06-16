@@ -109,6 +109,13 @@ do
 	    # Make final archive
 
 	    fakeroot -- ar -cr "${OUT_DEB}" debian-binary control.tar.gz data.tar.gz
+
+	    # Sign it
+
+	    if which debsigs 2> /dev/null
+	    then
+	    	debsigs --sign=origin --default-key=20AE9981FBC18F91 "${OUT_DEB}" 
+	    fi
 	)
 
 	ls -lh "${TEMPDIR}/${OUT_DEB}"
