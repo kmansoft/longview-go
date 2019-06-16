@@ -24,4 +24,11 @@ then
 fi
 
 systemctl daemon-reload
-systemctl enable longview-go
+
+case "$1" in
+    install)
+	systemctl enable longview-go
+	systemctl start longview-go
+	;;
+esac
+
