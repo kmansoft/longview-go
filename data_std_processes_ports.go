@@ -256,7 +256,7 @@ func (list *DataProcessList) getProcess(pid uint64) *DataProcess {
 						case "Uid":
 							item.UID, _ = strconv.ParseUint(list.getField(val, 1), 10, 64)
 						case "VmRSS":
-							item.PPID, _ = strconv.ParseUint(list.getField(val, 0), 10, 64)
+							item.RSS, _ = strconv.ParseUint(list.getField(val, 0), 10, 64)
 						}
 					}
 				}
