@@ -32,7 +32,7 @@ case "$SERVER" in
     "kman.mobi")
         KEY="2C6F9D8D-068A-D23C-1B87639441717CB1"
         ;;
-    "apache.topview.rocks")
+    "clearview.rocks")
         KEY="B6EEAB78-DAC1-12BB-55A06A8AD70521FF"
         ;;
     *)
