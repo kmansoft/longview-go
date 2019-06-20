@@ -192,7 +192,7 @@ func (list *DataProcessList) loadProcessList() error {
 	getconfOut := new(bytes.Buffer)
 	getconfCommand.Stdout = getconfOut
 	_ = getconfCommand.Run()
-	if ticks, err := strconv.ParseFloat(getconfOut.String(), 64); err == nil {
+	if ticks, err := strconv.ParseFloat(strings.TrimSpace(getconfOut.String()), 64); err == nil {
 		list.ticks = ticks
 	}
 
