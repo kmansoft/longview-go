@@ -52,9 +52,8 @@ func GetDataProcessesPorts(data *Data) error {
 
 		prefix = fmt.Sprintf("Processes.%s.%s.", proc.Name, proc.User)
 
-		data.Longterm[prefix+"mem"] = proc.RSS
-		data.Longterm[prefix+"cpu"] = proc.CPU
-
+		processList.addToCount(data.Longterm, prefix+"mem", proc.RSS)
+		processList.addToCount(data.Longterm, prefix+"cpu", proc.CPU)
 		processList.addToCount(data.Longterm, prefix+"count", 1)
 		processList.addToCount(data.Longterm, prefix+"ioreadkbytes", proc.IOReadKBytes)
 		processList.addToCount(data.Longterm, prefix+"iowritekbytes", proc.IOWriteKBytes)
