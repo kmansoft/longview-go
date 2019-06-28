@@ -148,7 +148,7 @@ func sendDataToServer(client *http.Client, apiKey string, data *Data) (int, bool
 	_ = writer.Close()
 
 	// Send it
-	resp, err := http.Post("https://longview.linode.com/post", writer.FormDataContentType(), body)
+	resp, err := client.Post("https://longview.linode.com/post", writer.FormDataContentType(), body)
 	if err != nil {
 		fmt.Printf("Cannot get http response data: %s\n", err)
 		return 0, false, err
