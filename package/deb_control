@@ -10,7 +10,7 @@ Description: A port of Linode Longview client to Go
  Features:
  .
   * A drop-in replacement for Linode Longview client
-  * Supports monitoring of system metrics (network, disk, system info), Nginx, MySQL
-  * Does not support (yet) Apache or apt-get updates
+  * Supports monitoring of system metrics (network, disk, system info), Apache, Nginx, MySQL
+  * Does not support (yet) apt-get updates
   * Does not support (yet) dm and md disk volumes
 
