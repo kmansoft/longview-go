@@ -1,12 +1,12 @@
 # longview-go
-This is going to be a GO version of Linode Longview agent (client): 
+This is a GO version of Linode Longview agent (client): 
 
 https://github.com/linode/longview
 
-I like the software, but don't like that it's written in Perl and installed
+I like the software, but don't like that it's written in Perl and installs
 a whole bunch of Perl libraries (modules) as dependencies.
 
-A Go version will just be a single executable, as usual.
+This Go version is just a single executable, no dependencies.
 
 Things that are working now:
 
@@ -21,8 +21,7 @@ Things that are working now:
 - Apache
 - MySQL
 
-My goal is feature parity with the Perl version, at this time these are
-still missing:
+At this time these are still missing compared to Linode's official version:
 
 - Package updates
 

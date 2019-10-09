@@ -42,7 +42,7 @@ esac
 
 echo "*** Building Debian package ..."
 
-if ! ./package/package_debian.sh amd64
+if ! ./package/package.sh amd64
 then
 	echo "*** Error"
 	exit 1
