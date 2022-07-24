@@ -106,7 +106,20 @@ func main() {
 }
 
 func isApiKeyValid(apiKey string) bool {
-	return len(apiKey) == 35
+	// 383478C9-711E-44E0-884D2A09CCFA714B
+	if len(apiKey) == 35 &&
+		apiKey[8] == '-' &&
+		apiKey[13] == '-' &&
+		apiKey[18] == '-' {
+		for _, ch := range apiKey {
+			if !(ch >= 'a' && ch <= 'f' || ch >= 'A' && ch <= 'F' || ch >= '0' && ch <= '9' || ch == '-') {
+				return false
+			}
+		}
+		return true
+	}
+
+	return false
 }
 
 func isApiKeyTest(apiKey string) bool {
