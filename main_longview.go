@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
@@ -33,13 +34,16 @@ func main() {
 	apiKey := ""
 	apiKeyBytes, err := ioutil.ReadFile(API_KEY_FILE)
 	if err == nil {
-		for _, l := range strings.Split(strings.TrimSpace(string(apiKeyBytes)), "\n") {
-			l = strings.TrimSpace(l)
+		sc := bufio.NewScanner(bytes.NewReader(apiKeyBytes))
+		for sc.Scan() {
+			l := strings.TrimSpace(sc.Text())
 			if strings.HasPrefix(l, "#") {
 				continue
 			}
-			apiKey = l
-			break
+			if len(l) > 0 {
+				apiKey = l
+				break
+			}
 		}
 	}
 	if len(apiKey) == 0 {
