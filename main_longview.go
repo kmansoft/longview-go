@@ -11,6 +11,7 @@ import (
 	"net/textproto"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -108,6 +109,10 @@ func isApiKeyTest(apiKey string) bool {
 	return apiKey == API_KEY_TEST
 }
 
+var gzipCompressPool = sync.Pool{New: func() interface{} {
+	return gzip.NewWriter(ioutil.Discard)
+}}
+
 func sendDataToServer(client *http.Client, apiKey string, data *Data) (int, bool, error) {
 
 	// Add other smaller required fields
@@ -122,13 +127,16 @@ func sendDataToServer(client *http.Client, apiKey string, data *Data) (int, bool
 	post.Payload = append(post.Payload, data)
 
 	// Encode to JSON
-	jsonData, _ := json.MarshalIndent(&post, "", "\t")
+	jsonData, _ := json.Marshal(&post)
 	fmt.Printf("%s\n", jsonData)
 
 	// Compress the JSON
 	jsonCompressBuffer := bytes.Buffer{}
 
-	jsonCompressWriter := gzip.NewWriter(&jsonCompressBuffer)
+	jsonCompressWriter := gzipCompressPool.Get().(*gzip.Writer)
+	defer gzipCompressPool.Put(jsonCompressWriter)
+
+	jsonCompressWriter.Reset(&jsonCompressBuffer)
 	_, _ = jsonCompressWriter.Write(jsonData)
 	_ = jsonCompressWriter.Close()
 
